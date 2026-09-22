@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUKLIR & SPACE OUTREACH - Retro Interactive</title>
+    <!-- Pixel Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #132C47;
+            --bg-card: #294C63;
+            --accent-teal: #78AEAD;
+            --accent-light: #D4ECE9;
+            --accent-coral: #D86350;
+            --accent-peach: #FBAE54;
+            --text-dark: #132C47;
+            --font-pixel: 'Press Start 2P', monospace;
+            --font-body: 'VT323', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--accent-light);
+            font-family: var(--font-body);
+            font-size: 20px;
+            line-height: 1.4;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(var(--bg-card) 1px, transparent 0),
+                radial-gradient(var(--accent-coral) 1px, var(--bg-dark) 0);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            position: relative;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(19, 44, 71, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Pixel Container Border */
+        .pixel-box {
+            background: var(--bg-card);
+            border: 4px solid var(--accent-teal);
+            box-shadow: 
+                -5px 0 0 0 var(--bg-dark),
+                5px 0 0 0 var(--bg-dark),
+                0 -5px 0 0 var(--bg-dark),
+                0 5px 0 0 var(--bg-dark),
+                0 0 0 5px var(--accent-teal),
+                7px 7px 0px 3px rgba(0,0,0,0.4);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .pixel-box-coral {
+            border-color: var(--accent-coral);
+            box-shadow: 
+                -5px 0 0 0 var(--bg-dark),
+                5px 0 0 0 var(--bg-dark),
+                0 -5px 0 0 var(--bg-dark),
+                0 5px 0 0 var(--bg-dark),
+                0 0 0 5px var(--accent-coral),
+                7px 7px 0px 3px rgba(0,0,0,0.4);
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+        h1 {
+            font-family: var(--font-pixel);
+            font-size: 1.6rem;
+            color: var(--accent-peach);
+            text-shadow: 3px 3px #000, -2px -2px var(--accent-coral);
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--accent-light);
+            background: rgba(19, 44, 71, 0.85);
+            display: inline-block;
+            padding: 6px 16px;
+            border: 2px dashed var(--accent-teal);
+        }
+
+        /* Controls Audio Fixed */
+        .audio-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+
+        .ctrl-btn {
+            background: var(--accent-coral);
+            color: var(--accent-light);
+            border: none;
+            padding: 8px 12px;
+            font-family: var(--font-pixel);
+            font-size: 0.65rem;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #000;
+        }
+
+        .ctrl-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #000;
+        }
+
+        h2.section-title {
+            font-family: var(--font-pixel);
+            font-size: 1.1rem;
+            color: var(--accent-peach);
+            margin-bottom: 18px;
+            text-shadow: 2px 2px #000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Level Grid */
+        .grid-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .level-card {
+            background: rgba(19, 44, 71, 0.9);
+            border: 3px solid var(--accent-teal);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+        }
+
+        .level-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-peach);
+            background: #1C3D5E;
+        }
+
+        .level-badge {
+            font-family: var(--font-pixel);
+            font-size: 0.55rem;
+            background: var(--accent-coral);
+            color: #fff;
+            padding: 3px 6px;
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            border: 1px solid #000;
+        }
+
+        .level-icon {
+            font-size: 2.2rem;
+            margin: 10px 0;
+        }
+
+        .level-title {
+            font-family: var(--font-pixel);
+            font-size: 0.75rem;
+            color: var(--accent-peach);
+            margin-bottom: 6px;
+        }
+
+        /* Interactive Simulator Section */
+        .sim-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .sim-card {
+            background: rgba(19, 44, 71, 0.85);
+            border: 2px dashed var(--accent-teal);
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .sim-title {
+            font-family: var(--font-pixel);
+            font-size: 0.7rem;
+            color: var(--accent-peach);
+            margin-bottom: 10px;
+        }
+
+        .btn-action {
+            background: var(--accent-teal);
+            color: var(--text-dark);
+            border: none;
+            padding: 8px 12px;
+            font-family: var(--font-pixel);
+            font-size: 0.6rem;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 #000;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-peach);
+        }
+
+        /* Quiz Section */
+        .quiz-container {
+            background: rgba(19, 44, 71, 0.95);
+            padding: 15px;
+            border: 2px dashed var(--accent-coral);
+        }
+
+        .quiz-question {
+            font-family: var(--font-pixel);
+            font-size: 0.75rem;
+            color: var(--accent-light);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: var(--bg-card);
+            color: var(--accent-light);
+            border: 2px solid var(--accent-teal);
+            padding: 10px;
+            font-family: var(--font-body);
+            font-size: 1.2rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .option-btn:hover {
+            background: var(--accent-teal);
+            color: var(--text-dark);
+        }
+
+        /* Animal Team Grid */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        .member-card {
+            background: rgba(19, 44, 71, 0.85);
+            border: 2px solid var(--accent-peach);
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .animal-avatar {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 8px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .member-name {
+            font-family: var(--font-pixel);
+            font-size: 0.6rem;
+            color: var(--accent-peach);
+            margin-bottom: 4px;
+        }
+
+        .member-role {
+            font-size: 0.85rem;
+            color: var(--accent-light);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border: 4px solid var(--accent-coral);
+            padding: 20px;
+            max-width: 550px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-family: var(--font-pixel);
+            font-size: 0.9rem;
+            background: var(--accent-coral);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .modal-body ul {
+            list-style-type: square;
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-family: var(--font-pixel);
+            font-size: 0.55rem;
+            color: var(--accent-teal);
+            border-top: 2px dashed var(--accent-teal);
+            margin-top: 15px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            margin: 8px 0;
+            accent-color: var(--accent-coral);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.1rem; }
+            .subtitle { font-size: 0.95rem; }
+            .grid-levels { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="audio-controls">
+        <button class="ctrl-btn" onclick="toggleBGM()">🎵 BGM: ON</button>
+        <button class="ctrl-btn" onclick="toggleSFX()">🔊 SFX: ON</button>
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <h1>NUKLIR & SPACE OUTREACH</h1>
+            <div class="subtitle">🚀 Media Pembelajaran Sains & Teknologi Nuklir</div>
+        </header>
+
+        <!-- INTRO -->
+        <section class="pixel-box">
+            <h2 class="section-title">👾 WELCOME HERO!</h2>
+            <p>Tahukah kamu? Nuklir bukan sekadar bom atau hal berbahaya! Dari kesehatan, energi bersih, hingga penjelajahan antariksa, teknologi nuklir hadir di sekitar kita. Klik modul & cobalah simulator interaktif di bawah ini!</p>
+        </section>
+
+        <!-- MODUL MATERI -->
+        <section class="pixel-box pixel-box-coral">
+            <h2 class="section-title">🕹️ MODUL MATERI EDUKASI</h2>
+            <div class="grid-levels">
+                
+                <div class="level-card" onclick="openModule(1)">
+                    <span class="level-badge">LEVEL 1</span>
+                    <div class="level-icon">☢️</div>
+                    <div class="level-title">Radiasi Sekitar</div>
+                    <p style="font-size: 0.85rem;">Sinar matahari & pisang juga punya radiasi?!</p>
+                </div>
+
+                <div class="level-card" onclick="openModule(2)">
+                    <span class="level-badge">LEVEL 2</span>
+                    <div class="level-icon">⚡</div>
+                    <div class="level-title">Nuklir Sehari-hari</div>
+                    <p style="font-size: 0.85rem;">Kedokteran nuklir & energi bersih PLTN.</p>
+                </div>
+
+                <div class="level-card" onclick="openModule(3)">
+                    <span class="level-badge">LEVEL 3</span>
+                    <div class="level-icon">👨‍🚀</div>
+                    <div class="level-title">Antariksa & Rocket</div>
+                    <p style="font-size: 0.85rem;">Baterai RTG penjelajah Mars & Cosmonaut.</p>
+                </div>
+
+                <div class="level-card" onclick="openModule(4)">
+                    <span class="level-badge">LEVEL 4</span>
+                    <div class="level-icon">🛡️</div>
+                    <div class="level-title">Proteksi ALARA</div>
+                    <p style="font-size: 0.85rem;">3 Aturan penting: Waktu, Jarak, & Perisai.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- LAB SIMULATOR INTERAKTIF -->
+        <section class="pixel-box">
+            <h2 class="section-title">🧪 SIMULATOR INTERAKTIF</h2>
+            <div class="sim-grid">
+                
+                <!-- Simulator 1: Geiger Counter -->
+                <div class="sim-card">
+                    <div class="sim-title">📟 GEIGER COUNTER SCANNER</div>
+                    <p style="font-size: 0.85rem;">Pilih objek untuk mengukur tingkat radiasinya:</p>
+                    <select id="geiger-select" style="width:100%; padding:5px; margin: 8px 0; background:var(--bg-dark); color:var(--accent-light); font-family:var(--font-body); border:1px solid var(--accent-teal);">
+                        <option value="banana">🍌 Pisang Alami (0.1 µSv)</option>
+                        <option value="granite">🪨 Batuan Granit (0.2 µSv)</option>
+                        <option value="xray">🦴 Sinar-X Medis (100 µSv)</option>
+                        <option value="space">🌌 Antariksa Kosmik (300 µSv)</option>
+                    </select>
+                    <button class="btn-action" onclick="scanGeiger()">🔍 UTUSAN SCANNER</button>
+                    <div id="geiger-result" style="margin-top:10px; font-family:var(--font-pixel); font-size:0.6rem; color:var(--accent-peach);">Klik Scan untuk uji!</div>
+                </div>
+
+                <!-- Simulator 2: Baterai RTG Mars -->
+                <div class="sim-card">
+                    <div class="sim-title">🔋 BATERAI NUKLIR RTG MARS</div>
+                    <p style="font-size: 0.85rem;">Geser daya termoelektrik Rover Mars:</p>
+                    <input type="range" id="rtg-range" min="0" max="100" value="50" oninput="updateRTG(this.value)">
+                    <div style="font-size:0.9rem;">Daya Listrik: <span id="rtg-val" style="color:var(--accent-peach);">50</span>%</div>
+                    <div id="rtg-status" style="font-family:var(--font-pixel); font-size:0.55rem; color:var(--accent-teal); margin-top:5px;">System Ready</div>
+                </div>
+
+                <!-- Simulator 3: Shielding Test -->
+                <div class="sim-card">
+                    <div class="sim-title">🛡️ UJI PERISAI RADIASI</div>
+                    <p style="font-size: 0.85rem;">Pilih penghalang untuk menyerap radiasi:</p>
+                    <button class="btn-action" onclick="testShield('Kertas')">📄 Kertas (Hentikan Alfa)</button>
+                    <button class="btn-action" onclick="testShield('Aluminium')">🛡️ Aluminium (Hentikan Beta)</button>
+                    <button class="btn-action" onclick="testShield('Timbal Thick')">🧱 Timbal Tebal (Hentikan Gamma)</button>
+                    <div id="shield-result" style="margin-top:8px; font-family:var(--font-pixel); font-size:0.55rem; color:var(--accent-peach);">Pilih bahan perisai</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MINI QUIZ GAME -->
+        <section class="pixel-box pixel-box-coral">
+            <h2 class="section-title">🎯 MINI QUIZ CHALLENGE</h2>
+            <div class="quiz-container">
+                <div class="quiz-question" id="quiz-question">Loading Pertanyaan...</div>
+                <div class="quiz-options" id="quiz-options"></div>
+                <div id="quiz-feedback" style="margin-top: 12px; font-family: var(--font-pixel); font-size: 0.65rem;"></div>
+            </div>
+        </section>
+
+        <!-- TIM ANIMAL HEROES (6 MEMBER) -->
+        <section class="pixel-box">
+            <h2 class="section-title">🐾 TIM ANIMAL HEROES OUTREACH</h2>
+            <div class="team-grid">
+                
+                <!-- Member 1: Fox -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="1" y="1" width="2" height="2" fill="#D86350"/>
+                            <rect x="5" y="1" width="2" height="2" fill="#D86350"/>
+                            <rect x="2" y="3" width="4" height="4" fill="#D86350"/>
+                            <rect x="3" y="5" width="2" height="1" fill="#D4ECE9"/>
+                            <rect x="2" y="4" width="1" height="1" fill="#132C47"/>
+                            <rect x="5" y="4" width="1" height="1" fill="#132C47"/>
+                            <rect x="3" y="6" width="2" height="1" fill="#132C47"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 1</div>
+                    <div class="member-role">Fox Leader</div>
+                </div>
+
+                <!-- Member 2: Cat -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="1" y="1" width="1" height="2" fill="#FBAE54"/>
+                            <rect x="6" y="1" width="1" height="2" fill="#FBAE54"/>
+                            <rect x="2" y="2" width="4" height="5" fill="#FBAE54"/>
+                            <rect x="2" y="4" width="1" height="1" fill="#78AEAD"/>
+                            <rect x="5" y="4" width="1" height="1" fill="#78AEAD"/>
+                            <rect x="3" y="5" width="2" height="1" fill="#D86350"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 2</div>
+                    <div class="member-role">Cat Creative</div>
+                </div>
+
+                <!-- Member 3: Bear -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="1" y="1" width="2" height="2" fill="#294C63"/>
+                            <rect x="5" y="1" width="2" height="2" fill="#294C63"/>
+                            <rect x="1" y="2" width="6" height="5" fill="#294C63"/>
+                            <rect x="2" y="4" width="1" height="1" fill="#FBAE54"/>
+                            <rect x="5" y="4" width="1" height="1" fill="#FBAE54"/>
+                            <rect x="3" y="5" width="2" height="2" fill="#D4ECE9"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 3</div>
+                    <div class="member-role">Bear Coder</div>
+                </div>
+
+                <!-- Member 4: Bunny -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="2" y="0" width="1" height="3" fill="#D4ECE9"/>
+                            <rect x="5" y="0" width="1" height="3" fill="#D4ECE9"/>
+                            <rect x="2" y="3" width="4" height="4" fill="#D4ECE9"/>
+                            <rect x="3" y="4" width="1" height="1" fill="#D86350"/>
+                            <rect x="4" y="4" width="1" height="1" fill="#D86350"/>
+                            <rect x="3" y="5" width="2" height="1" fill="#FBAE54"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 4</div>
+                    <div class="member-role">Bunny Design</div>
+                </div>
+
+                <!-- Member 5: Panda -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="1" y="1" width="2" height="2" fill="#132C47"/>
+                            <rect x="5" y="1" width="2" height="2" fill="#132C47"/>
+                            <rect x="1" y="2" width="6" height="5" fill="#D4ECE9"/>
+                            <rect x="2" y="4" width="1" height="2" fill="#132C47"/>
+                            <rect x="5" y="4" width="1" height="2" fill="#132C47"/>
+                            <rect x="3" y="5" width="2" height="1" fill="#132C47"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 5</div>
+                    <div class="member-role">Panda Public</div>
+                </div>
+
+                <!-- Member 6: Owl -->
+                <div class="member-card">
+                    <div class="animal-avatar">
+                        <svg width="40" height="40" viewBox="0 0 8 8">
+                            <rect x="1" y="2" width="6" height="5" fill="#78AEAD"/>
+                            <rect x="2" y="3" width="2" height="2" fill="#D4ECE9"/>
+                            <rect x="4" y="3" width="2" height="2" fill="#D4ECE9"/>
+                            <rect x="2" y="4" width="1" height="1" fill="#132C47"/>
+                            <rect x="5" y="4" width="1" height="1" fill="#132C47"/>
+                            <rect x="3" y="5" width="2" height="1" fill="#FBAE54"/>
+                        </svg>
+                    </div>
+                    <div class="member-name">Member 6</div>
+                    <div class="member-role">Owl Researcher</div>
+                </div>
+
+            </div>
+        </section>
+
+        <footer>
+            <p>PROJECT MEDIA OUTREACH © 2026 | CREATED FOR TARGET YOUTH (10-25 THN)</p>
+        </footer>
+    </div>
+
+    <!-- MODAL POPUP -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModule()">X</button>
+            <h2 id="modal-title" style="font-family: var(--font-pixel); color: var(--accent-peach); margin-bottom: 12px; font-size: 0.9rem;">Judul Modul</h2>
+            <div class="modal-body" id="modal-body">
+                <!-- Isi dimuat via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Modul Materi
+        const moduleData = {
+            1: {
+                title: "LEVEL 1: RADIAST SEKITAR KITA",
+                content: `
+                    <p>Radiasi hadir di sekeliling kita setiap hari secara alami!</p>
+                    <ul>
+                        <li><b>Sinar Matahari:</b> Mengandung sinar UV alami yang memberi Vitamin D.</li>
+                        <li><b>Buah Pisang:</b> Memiliki sedikit kandungan Kalium-40 yang radioaktif secara alami namun 100% aman dimakan!</li>
+                        <li><b>Sinar Kosmik:</b> Sinar radiasi dari luar angkasa yang sampai ke bumi.</li>
+                    </ul>
+                `
+            },
+            2: {
+                title: "LEVEL 2: NUKLIR SEHARI-HARI",
+                content: `
+                    <p>Teknologi nuklir sangat bermanfaat bagi kehidupan sehari-hari:</p>
+                    <ul>
+                        <li><b>Kedokteran Nuklir:</b> Mendiagnosis penyakit secara akurat & mengobati sel kanker.</li>
+                        <li><b>Pertanian Modern:</b> Membantu mutasi benih unggul agar panen padi lebih tahan penyakit.</li>
+                        <li><b>PLTN:</b> Menghasilkan listrik tanpa emisi polusi asap karbon rumah kaca.</li>
+                    </ul>
+                `
+            },
+            3: {
+                title: "LEVEL 3: ANTARIKSA & ROCKET",
+                content: `
+                    <p>Bagaimana menjelajah luar angkasa tanpa sinar matahari?</p>
+                    <ul>
+                        <li><b>Baterai RTG:</b> Mengubah panas elemen radioaktif menjadi listrik tanpa perlu diisi ulang selama belasan tahun!</li>
+                        <li><b>Cosmonaut Shielding:</b> Pakaian khusus astronot dilapisi bahan pelindung radiasi ruang hampa.</li>
+                    </ul>
+                `
+            },
+            4: {
+                title: "LEVEL 4: PROTEKSI ALARA",
+                content: `
+                    <p>Tiga pedoman utama agar aman dari bahaya radiasi:</p>
+                    <ul>
+                        <li><b>1. Waktu:</b> Batasi lama waktu di dekat sumber radiasi.</li>
+                        <li><b>2. Jarak:</b> Berdiri lebih jauh dari sumber radiasi.</li>
+                        <li><b>3. Perisai:</b> Gunakan bahan pelindung seperti dinding timbal atau beton tebal.</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Data Kuis
+        const quizQuestions = [
+            {
+                q: "1. Makanan lezat apa yang memiliki radiasi Kalium-40 alami namun aman diminum/dimakan?",
+                options: ["Pisang", "Es Krim", "Kue Cokelat"],
+                answer: 0
+            },
+            {
+                q: "2. Baterai nuklir penjelajah planet Mars yang mengubah panas radioaktif menjadi listrik dinamakan?",
+                options: ["Aki Mobil", "RTG (Radioisotope Generator)", "Baterai Jam"],
+                answer: 1
+            },
+            {
+                q: "3. Menurut prinsip ALARA, jika kita memperjauh jarak dari sumber radiasi, paparan akan...",
+                options: ["Bertambah Kuat", "Sama Saja", "Berkurang Drastis"],
+                answer: 2
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let sfxEnabled = true;
+        let bgmEnabled = false;
+
+        // Audio System (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // SFX Halus Rendah
+        function playSFX(freq = 400, type = 'sine', duration = 0.08) {
+            if (!sfxEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // Volume sangat lembut
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        // BGM Synthwave Lo-Fi "Dancin Remix" Chords
+        let bgmTimer = null;
+        const dancinMelody = [
+            {f: 329.63, d: 0.3}, {f: 392.00, d: 0.3}, {f: 440.00, d: 0.4},
+            {f: 392.00, d: 0.3}, {f: 329.63, d: 0.3}, {f: 293.66, d: 0.4},
+            {f: 261.63, d: 0.3}, {f: 293.66, d: 0.3}, {f: 329.63, d: 0.5}
+        ];
+        let noteIdx = 0;
+
+        function playBGMStep() {
+            if (!bgmEnabled) return;
+            const note = dancinMelody[noteIdx];
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = note.f;
+                gain.gain.setValueAtTime(0.015, audioCtx.currentTime); // Soft background music
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.d);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + note.d);
+            } catch(e){}
+
+            noteIdx = (noteIdx + 1) % dancinMelody.length;
+            bgmTimer = setTimeout(playBGMStep, note.d * 1000 + 100);
+        }
+
+        function toggleBGM() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            bgmEnabled = !bgmEnabled;
+            const btn = document.querySelectorAll('.ctrl-btn')[0];
+            btn.innerText = bgmEnabled ? "🎵 BGM: ON" : "🔇 BGM: OFF";
+            if (bgmEnabled) playBGMStep();
+            else clearTimeout(bgmTimer);
+        }
+
+        function toggleSFX() {
+            sfxEnabled = !sfxEnabled;
+            const btn = document.querySelectorAll('.ctrl-btn')[1];
+            btn.innerText = sfxEnabled ? "🔊 SFX: ON" : "🔇 SFX: OFF";
+        }
+
+        // Modal Functionality
+        function openModule(id) {
+            playSFX(500, 'sine', 0.1);
+            document.getElementById('modal-title').innerText = moduleData[id].title;
+            document.getElementById('modal-body').innerHTML = moduleData[id].content;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModule() {
+            playSFX(250, 'sine', 0.08);
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Simulators
+        function scanGeiger() {
+            playSFX(650, 'square', 0.05);
+            const val = document.getElementById('geiger-select').value;
+            const res = document.getElementById('geiger-result');
+            if(val === 'banana') res.innerText = "📟 Hasil: Radiasi Alami Rendah (Aman!)";
+            else if(val === 'granite') res.innerText = "📟 Hasil: Mineral Alami (Normal)";
+            else if(val === 'xray') res.innerText = "📟 Hasil: Dosis Medis Terukur";
+            else res.innerText = "📟 Hasil: Radiasi Kosmik Antariksa";
+        }
+
+        function updateRTG(val) {
+            document.getElementById('rtg-val').innerText = val;
+            const status = document.getElementById('rtg-status');
+            if (val > 80) status.innerText = "🚀 Daya Maksimal! Siap Jelajah Mars!";
+            else if (val > 30) status.innerText = "🔋 Daya Cukup Untuk Rover";
+            else status.innerText = "⚠️ Daya Rendah";
+        }
+
+        function testShield(type) {
+            playSFX(400, 'triangle', 0.1);
+            const res = document.getElementById('shield-result');
+            res.innerText = `🛡️ ${type} berhasil menyerap radiasi!`;
+        }
+
+        // Quiz Logic
+        function loadQuiz() {
+            const qData = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').innerText = qData.q;
+            const optContainer = document.getElementById('quiz-options');
+            optContainer.innerHTML = '';
+            document.getElementById('quiz-feedback').innerText = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx) {
+            const qData = quizQuestions[currentQuizIndex];
+            const feedback = document.getElementById('quiz-feedback');
+            if (selectedIdx === qData.answer) {
+                playSFX(600, 'triangle', 0.15);
+                feedback.style.color = '#78AEAD';
+                feedback.innerText = "✅ BENAR! HEBAT!";
+                setTimeout(() => {
+                    currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+                    loadQuiz();
+                }, 1200);
+            } else {
+                playSFX(200, 'sine', 0.15);
+                feedback.style.color = '#D86350';
+                feedback.innerText = "❌ JAWABAN BELUM TEPAT, COBA LAGI!";
+            }
+        }
+
+        // Background Particle Effect
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < 25; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3 + 1,
+                speedX: (Math.random() - 0.5) * 0.4,
+                speedY: (Math.random() - 0.5) * 0.4,
+                color: i % 2 === 0 ? '#78AEAD' : '#FBAE54'
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+
+                ctx.fillStyle = p.color;
+                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Initialize
+        loadQuiz();
+        animateParticles();
+    </script>
+</body>
+</html>
